@@ -5,7 +5,6 @@ stages:
   - plan
   - deploy
   - test
-  # - test_on_demand
   - notify
 
 variables:
