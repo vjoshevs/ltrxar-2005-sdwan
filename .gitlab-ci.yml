@@ -8,7 +8,6 @@ stages:
   - notify
 
 variables:
-  ## Disable SSL verification for git operation
   GIT_SSL_NO_VERIFY: "true"
 
   SDWAN_USERNAME:
@@ -30,6 +29,9 @@ variables:
   GITLAB_API_URL:
     description: "GitLab API v4 root URL"
     value: "${CI_API_V4_URL}"
+  TF_HTTP_ADDRESS:
+    description: "GitLab HTTP Address to store the TF state file"
+    value: "${GITLAB_API_URL}/projects/${CI_PROJECT_ID}/terraform/state/tfstate"
 
 cache:
   key: terraform_modules_and_lock
@@ -112,6 +114,19 @@ test-integration:
     - deploy
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule" && $CI_COMMIT_BRANCH =="main"
+
+test-idempotency:
+  stage: test
+  resource_group: sdwan
+  script:
+    - terraform init -input=false
+    - terraform plan -input=false -detailed-exitcode
+  dependencies:
+    - deploy
+  needs:
+    - deploy
+  only:
+    - main
 
 failure:
   stage: notify
